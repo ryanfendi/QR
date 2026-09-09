@@ -86,21 +86,25 @@ export default async function ProductPage({ params }) {
             Berat: {product.weight_gram} gram
           </p>
 
-          <button
-            style={{
-              width: "100%",
-              padding: "17px",
-              marginTop: "25px",
-              border: "none",
-              borderRadius: "12px",
-              background: "black",
-              color: "white",
-              fontSize: "17px",
-              fontWeight: "bold",
-            }}
-          >
-            BELI SEKARANG
-          </button>
+          <a
+  href={`/product/${product.id}/checkout`}
+  style={{
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "17px",
+    marginTop: "25px",
+    borderRadius: "12px",
+    background: "black",
+    color: "white",
+    fontSize: "17px",
+    fontWeight: "bold",
+    textAlign: "center",
+    textDecoration: "none",
+  }}
+>
+  BELI SEKARANG
+</a>
         </div>
       </div>
     </main>

@@ -9,6 +9,7 @@ export default function OrderPage({ params }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function OrderPage({ params }) {
 
     setPaying(true);
     setError("");
+    setQrUrl("");
 
     try {
       const response = await fetch("/api/payment", {
@@ -58,12 +60,26 @@ export default function OrderPage({ params }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || data.status_message || "Pembayaran gagal");
+        throw new Error(
+          data.error ||
+          data.status_message ||
+          "Pembayaran gagal"
+        );
       }
 
-      console.log("RESPON MIDTRANS:", data);
+      const qrAction =
+        data.actions?.find(
+          (action) => action.name === "generate-qr-code-v2"
+        ) ||
+        data.actions?.find(
+          (action) => action.name === "generate-qr-code"
+        );
 
-      alert("QRIS berhasil dibuat. Data pembayaran sudah diterima.");
+      if (!qrAction?.url) {
+        throw new Error("URL QRIS tidak ditemukan dari Midtrans");
+      }
+
+      setQrUrl(qrAction.url);
 
     } catch (err) {
       setError(err.message);
@@ -148,22 +164,62 @@ export default function OrderPage({ params }) {
         <p>WhatsApp: {order.buyer_phone}</p>
         <p>Alamat: {order.buyer_address}</p>
 
-        <button
-          onClick={handlePayment}
-          disabled={paying}
-          style={{
-            width: "100%",
-            padding: 16,
-            marginTop: 20,
-            border: "none",
-            borderRadius: 10,
-            fontSize: 16,
-            fontWeight: "bold",
-            cursor: paying ? "wait" : "pointer",
-          }}
-        >
-          {paying ? "MEMBUAT PEMBAYARAN..." : "BAYAR SEKARANG"}
-        </button>
+        {!qrUrl && (
+          <button
+            onClick={handlePayment}
+            disabled={paying}
+            style={{
+              width: "100%",
+              padding: 16,
+              marginTop: 20,
+              border: "none",
+              borderRadius: 10,
+              fontSize: 16,
+              fontWeight: "bold",
+            }}
+          >
+            {paying
+              ? "MEMBUAT QRIS..."
+              : "BAYAR SEKARANG"}
+          </button>
+        )}
+
+        {qrUrl && (
+          <div
+            style={{
+              marginTop: 25,
+              textAlign: "center",
+            }}
+          >
+            <h2>Bayar dengan QRIS</h2>
+
+            <p>
+              Scan QR berikut untuk membayar
+            </p>
+
+            <img
+              src={qrUrl}
+              alt="QRIS Pembayaran"
+              style={{
+                width: 280,
+                maxWidth: "100%",
+                height: "auto",
+                display: "block",
+                margin: "20px auto",
+              }}
+            />
+
+            <p>
+              <strong>
+                Rp {Number(order.total).toLocaleString("id-ID")}
+              </strong>
+            </p>
+
+            <p>
+              Status: <strong>MENUNGGU PEMBAYARAN</strong>
+            </p>
+          </div>
+        )}
 
         {error && (
           <p style={{ marginTop: 15 }}>

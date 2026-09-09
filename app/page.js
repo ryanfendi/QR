@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main
@@ -8,7 +10,7 @@ export default function Home() {
         alignItems: "center",
         justifyContent: "center",
         padding: "24px",
-        fontFamily: "Arial, sans-serif"
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
@@ -19,7 +21,7 @@ export default function Home() {
           borderRadius: "24px",
           padding: "40px 24px",
           textAlign: "center",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
         <div
@@ -34,7 +36,7 @@ export default function Home() {
             justifyContent: "center",
             margin: "0 auto 20px",
             fontSize: "28px",
-            fontWeight: "bold"
+            fontWeight: "bold",
           }}
         >
           QR
@@ -49,7 +51,7 @@ export default function Home() {
             color: "#666",
             fontSize: "18px",
             lineHeight: "1.6",
-            marginBottom: "30px"
+            marginBottom: "30px",
           }}
         >
           Jual produk dengan satu QR.
@@ -57,26 +59,29 @@ export default function Home() {
           Pembeli scan, checkout, dan bayar.
         </p>
 
-        <button
+        <Link
+          href="/seller"
           style={{
+            display: "block",
             width: "100%",
+            boxSizing: "border-box",
             padding: "16px",
-            border: "none",
             borderRadius: "14px",
             background: "black",
             color: "white",
             fontSize: "17px",
-            fontWeight: "bold"
+            fontWeight: "bold",
+            textDecoration: "none",
           }}
         >
           MULAI JUAL
-        </button>
+        </Link>
 
         <p
           style={{
             marginTop: "24px",
             fontSize: "13px",
-            color: "#999"
+            color: "#999",
           }}
         >
           Scan → Checkout → Bayar
@@ -84,4 +89,4 @@ export default function Home() {
       </div>
     </main>
   );
-            }
+}

@@ -28,26 +28,21 @@ export default async function OrderPage({ params }) {
     <main style={{ padding: 30, fontFamily: "Arial", maxWidth: 600, margin: "auto" }}>
       <h1>Pesanan Berhasil</h1>
 
-      <div style={{
-        padding: 20,
-        border: "1px solid #ddd",
-        borderRadius: 12,
-        marginTop: 20
-      }}>
-        <h2>{order.products?.name}</h2>
-
-        <p>
-          Total: <strong>Rp {order.total.toLocaleString("id-ID")}</strong>
-        </p>
-
-        <p>Status: <strong>{order.status}</strong></p>
-
-        <hr />
-
-        <p>Nama: {order.buyer_name}</p>
-        <p>WhatsApp: {order.buyer_phone}</p>
-        <p>Alamat: {order.buyer_address}</p>
-      </div>
+<div style={{
+  padding: 15,
+  background: "#f5f5f5",
+  borderRadius: 10,
+  marginTop: 15
+}}>
+  <strong>ID Pesanan</strong>
+  <div style={{
+    fontSize: 20,
+    marginTop: 8,
+    letterSpacing: 2
+  }}>
+    QC-{id.slice(0, 6).toUpperCase()}
+  </div>
+</div>
     </main>
   );
 }

@@ -28,9 +28,9 @@ export async function POST(request) {
         },
         body: JSON.stringify({
           transaction_details: {
-            order_id: order_id,
-            gross_amount: Number(gross_amount),
-          },
+  order_id: `${order_id}-${Date.now()}`,
+  gross_amount: Number(gross_amount),
+},
 
           enabled_payments: [
             "other_qris"

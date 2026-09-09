@@ -18,7 +18,7 @@ export async function POST(request) {
       .toString("base64");
 
     const response = await fetch(
-      "https://api.sandbox.midtrans.com/v2/charge",
+      "https://app.sandbox.midtrans.com/snap/v1/transactions",
       {
         method: "POST",
         headers: {
@@ -27,43 +27,28 @@ export async function POST(request) {
           Authorization: `Basic ${auth}`,
         },
         body: JSON.stringify({
-          payment_type: "qris",
-
           transaction_details: {
             order_id: order_id,
             gross_amount: Number(gross_amount),
           },
 
-          qris: {
-            acquirer: "gopay",
-          },
+          enabled_payments: [
+            "other_qris"
+          ]
         }),
       }
     );
 
     const data = await response.json();
 
-    /*
-     * UNTUK SEMENTARA:
-     * jangan proses apa pun.
-     * Kembalikan response asli Midtrans.
-     */
-
     return NextResponse.json(
-      {
-        MIDTRANS_STATUS: response.status,
-        MIDTRANS_RESPONSE: data
-      },
-      {
-        status: response.ok ? 200 : response.status
-      }
+      data,
+      { status: response.ok ? 200 : response.status }
     );
 
   } catch (error) {
     return NextResponse.json(
-      {
-        error: error.message
-      },
+      { error: error.message },
       { status: 500 }
     );
   }

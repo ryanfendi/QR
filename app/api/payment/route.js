@@ -26,17 +26,21 @@ export async function POST(request) {
       );
     }
 
-    const auth = Buffer.from(serverKey + ":").toString("base64");
+    const auth = Buffer
+      .from(serverKey + ":")
+      .toString("base64");
 
     const response = await fetch(
       "https://api.sandbox.midtrans.com/v2/charge",
       {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Basic ${auth}`,
+          "Accept": "application/json",
+          "Authorization": `Basic ${auth}`,
         },
+
         body: JSON.stringify({
           payment_type: "qris",
 
@@ -54,43 +58,21 @@ export async function POST(request) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error:
-            data.status_message ||
-            "Gagal membuat pembayaran QRIS",
-          midtrans: data,
-        },
-        { status: response.status }
-      );
-    }
+    return NextResponse.json({
+      debug: true,
+      http_status: response.status,
 
-    // Cari URL QRIS dengan lebih fleksibel
-    const qrAction = data.actions?.find(
-      (action) =>
-        action?.url &&
-        action.url.includes("/qr-code")
-    );
+      midtrans: data,
 
-    if (!qrAction?.url) {
-      return NextResponse.json(
-        {
-          error: "Midtrans tidak mengembalikan URL QRIS",
-          midtrans: data,
-        },
-        { status: 500 }
-      );
-    }
+      actions: data.actions || null,
 
-        return NextResponse.json({
-  success: true,
-  midtrans_response: data,
-});
+      qr_string: data.qr_string || null,
+    });
+
   } catch (error) {
     return NextResponse.json(
       {
-        error: "Gagal membuat pembayaran",
+        error: "SERVER ERROR",
         detail: error.message,
       },
       { status: 500 }

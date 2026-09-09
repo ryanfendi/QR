@@ -89,12 +89,10 @@ export default function OrderPage({ params }) {
         },
 
         onError: function (result) {
-  alert(
-    "ERROR MIDTRANS:\n\n" +
-    JSON.stringify(result, null, 2)
+  setError(
+    "ERROR MIDTRANS: " +
+    JSON.stringify(result)
   );
-
-  setError("Pembayaran gagal.");
   setPaying(false);
 },
 

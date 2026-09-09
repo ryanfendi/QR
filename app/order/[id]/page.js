@@ -14,16 +14,10 @@ export default function OrderPage({ params }) {
   useEffect(() => {
     async function loadOrder() {
       const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          products (
-            name,
-            price
-          )
-        `)
-        .eq("id", id)
-        .single();
+  .from("orders")
+  .select("*")
+  .eq("id", id)
+  .single();
 
       if (error) {
         setError(error.message);

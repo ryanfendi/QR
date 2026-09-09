@@ -84,22 +84,9 @@ export async function POST(request) {
     }
 
         return NextResponse.json({
-      success: true,
-      order_id: data.order_id,
-      transaction_id: data.transaction_id,
-      transaction_status: data.transaction_status,
-      qr_url:
-        data.actions?.find(
-          (action) => action.name === "generate-qr-code"
-        )?.url ||
-        data.actions?.find(
-          (action) => action.name === "generate-qr-code-v2"
-        )?.url ||
-        null,
-      qr_string: data.qr_string || null,
-      midtrans: data,
-    });
-
+  success: true,
+  midtrans_response: data,
+});
   } catch (error) {
     return NextResponse.json(
       {

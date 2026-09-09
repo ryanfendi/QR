@@ -36,9 +36,9 @@ export async function POST(request) {
         method: "POST",
 
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": `Basic ${auth}`,
+          Authorization: `Basic ${auth}`,
         },
 
         body: JSON.stringify({
@@ -58,15 +58,51 @@ export async function POST(request) {
 
     const data = await response.json();
 
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error:
+            data.status_message ||
+            "Midtrans gagal membuat QRIS",
+          midtrans: data,
+        },
+        { status: response.status }
+      );
+    }
+
+    const actions = Array.isArray(data.actions)
+      ? data.actions
+      : [];
+
+    const qrAction = actions.find(
+      (action) =>
+        action.name === "generate-qr-code"
+    );
+
+    const qrActionV2 = actions.find(
+      (action) =>
+        action.name === "generate-qr-code-v2"
+    );
+
     return NextResponse.json({
-      debug: true,
-      http_status: response.status,
+      success: true,
 
-      midtrans: data,
+      order_id: data.order_id,
 
-      actions: data.actions || null,
+      transaction_id: data.transaction_id,
 
-      qr_string: data.qr_string || null,
+      transaction_status:
+        data.transaction_status,
+
+      qr_url:
+        qrAction?.url ||
+        qrActionV2?.url ||
+        null,
+
+      qr_string:
+        data.qr_string || null,
+
+      actions: actions,
     });
 
   } catch (error) {

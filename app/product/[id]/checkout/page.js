@@ -1,26 +1,55 @@
-import { supabase } from "../../../../lib/supabase";
+"use client";
 
-export default async function CheckoutPage({ params }) {
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+import { useState } from "react";
+import { supabase } from "../../../../../lib/supabase";
 
-  if (error || !product) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <h1>Produk tidak ditemukan</h1>
-      </main>
-    );
+export default function CheckoutPage({ params }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", params.id)
+        .single();
+
+      if (productError) throw productError;
+
+      const shippingCost = 0;
+      const total = Number(product.price) + shippingCost;
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          product_id: product.id,
+          buyer_name: name,
+          buyer_phone: phone,
+          buyer_address: address,
+          shipping_cost: shippingCost,
+          total: total,
+          status: "PENDING",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      window.location.href = `/order/${order.id}`;
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Pesanan gagal dibuat.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -32,15 +61,11 @@ export default async function CheckoutPage({ params }) {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div
-        style={{
-          maxWidth: "600px",
-          margin: "0 auto",
-        }}
-      >
+      <div style={{ maxWidth: "600px", margin: "0 auto" }}>
         <h1>Checkout</h1>
 
-        <div
+        <form
+          onSubmit={handleSubmit}
           style={{
             background: "white",
             padding: "24px",
@@ -48,87 +73,78 @@ export default async function CheckoutPage({ params }) {
             marginTop: "20px",
           }}
         >
-          <h2>{product.name}</h2>
-
-          <p
-            style={{
-              fontSize: "25px",
-              fontWeight: "bold",
-            }}
-          >
-            Rp{Number(product.price).toLocaleString("id-ID")}
-          </p>
-
-          <hr style={{ margin: "25px 0" }} />
-
-          <h3>Data Pembeli</h3>
-
           <label>Nama</label>
           <input
-            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Nama lengkap"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: "14px",
-              marginTop: "8px",
-              marginBottom: "18px",
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              fontSize: "16px",
-            }}
+            style={inputStyle}
           />
 
           <label>Nomor WhatsApp</label>
           <input
-            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="08xxxxxxxxxx"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: "14px",
-              marginTop: "8px",
-              marginBottom: "18px",
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              fontSize: "16px",
-            }}
+            style={inputStyle}
           />
 
-          <h3>Alamat Pengiriman</h3>
-
+          <label>Alamat Pengiriman</label>
           <textarea
-            placeholder="Alamat lengkap untuk pengiriman"
+            required
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Alamat lengkap"
             rows="5"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: "14px",
-              marginTop: "8px",
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              fontSize: "16px",
-              resize: "vertical",
-            }}
+            style={inputStyle}
           />
+
+          {error && (
+            <div
+              style={{
+                background: "#ffe5e5",
+                color: "#b00020",
+                padding: "12px",
+                borderRadius: "10px",
+                marginTop: "15px",
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           <button
+            type="submit"
+            disabled={loading}
             style={{
               width: "100%",
               padding: "17px",
               marginTop: "25px",
               border: "none",
               borderRadius: "12px",
-              background: "black",
+              background: loading ? "#777" : "black",
               color: "white",
               fontSize: "17px",
               fontWeight: "bold",
             }}
           >
-            LANJUTKAN
+            {loading ? "MEMBUAT PESANAN..." : "BUAT PESANAN"}
           </button>
-        </div>
+        </form>
       </div>
     </main>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "14px",
+  marginTop: "8px",
+  marginBottom: "18px",
+  border: "1px solid #ddd",
+  borderRadius: "10px",
+  fontSize: "16px",
+};

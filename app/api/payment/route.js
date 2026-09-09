@@ -113,12 +113,9 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "SERVER ERROR",
-        detail: error.message,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+  TEST_VERSION: "QRIS_DEBUG_2026",
+  midtrans: data
+});
   }
 }

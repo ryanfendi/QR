@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { supabase } from "../../../lib/supabase";
 
 export default function OrderPage({ params }) {
@@ -9,7 +10,7 @@ export default function OrderPage({ params }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [qrUrl, setQrUrl] = useState("");
+  const [qrImage, setQrImage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function OrderPage({ params }) {
 
     setPaying(true);
     setError("");
-    setQrUrl("");
+    setQrImage("");
 
     try {
       const response = await fetch("/api/payment", {
@@ -67,11 +68,21 @@ export default function OrderPage({ params }) {
         );
       }
 
-      if (!data.qr_url) {
-        throw new Error("QRIS tidak ditemukan");
+      if (!data.qr_string) {
+        throw new Error(
+          "Midtrans tidak mengembalikan qr_string"
+        );
       }
 
-      setQrUrl(data.qr_url);
+      const image = await QRCode.toDataURL(
+        data.qr_string,
+        {
+          width: 500,
+          margin: 2,
+        }
+      );
+
+      setQrImage(image);
 
     } catch (err) {
       setError(err.message);
@@ -82,10 +93,7 @@ export default function OrderPage({ params }) {
 
   if (loading) {
     return (
-      <main style={{
-        padding: 30,
-        fontFamily: "Arial"
-      }}>
+      <main style={{ padding: 30, fontFamily: "Arial" }}>
         <h1>Memuat pesanan...</h1>
       </main>
     );
@@ -93,10 +101,7 @@ export default function OrderPage({ params }) {
 
   if (!order) {
     return (
-      <main style={{
-        padding: 30,
-        fontFamily: "Arial"
-      }}>
+      <main style={{ padding: 30, fontFamily: "Arial" }}>
         <h1>Pesanan tidak ditemukan</h1>
         <p>{error}</p>
       </main>
@@ -112,7 +117,6 @@ export default function OrderPage({ params }) {
         margin: "auto",
       }}
     >
-
       <h1>Pesanan Berhasil</h1>
 
       <div
@@ -144,7 +148,6 @@ export default function OrderPage({ params }) {
           marginTop: 20,
         }}
       >
-
         <h2>{order.products?.name}</h2>
 
         <p>
@@ -164,7 +167,7 @@ export default function OrderPage({ params }) {
         <p>WhatsApp: {order.buyer_phone}</p>
         <p>Alamat: {order.buyer_address}</p>
 
-        {!qrUrl && (
+        {!qrImage && (
           <button
             onClick={handlePayment}
             disabled={paying}
@@ -184,25 +187,25 @@ export default function OrderPage({ params }) {
           </button>
         )}
 
-        {qrUrl && (
+        {qrImage && (
           <div
             style={{
               marginTop: 25,
               textAlign: "center",
             }}
           >
-
             <h2>Bayar dengan QRIS</h2>
 
             <p>
-              Scan QR berikut untuk membayar
+              Scan QR berikut menggunakan aplikasi
+              pembayaran yang mendukung QRIS.
             </p>
 
             <img
-              src={qrUrl}
+              src={qrImage}
               alt="QRIS Pembayaran"
               style={{
-                width: 280,
+                width: 300,
                 maxWidth: "100%",
                 height: "auto",
                 display: "block",
@@ -222,7 +225,6 @@ export default function OrderPage({ params }) {
                 MENUNGGU PEMBAYARAN
               </strong>
             </p>
-
           </div>
         )}
 
@@ -231,9 +233,7 @@ export default function OrderPage({ params }) {
             ❌ {error}
           </p>
         )}
-
       </div>
-
     </main>
   );
 }

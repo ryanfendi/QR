@@ -67,19 +67,11 @@ export default function OrderPage({ params }) {
         );
       }
 
-      const qrAction =
-        data.actions?.find(
-          (action) => action.name === "generate-qr-code-v2"
-        ) ||
-        data.actions?.find(
-          (action) => action.name === "generate-qr-code"
-        );
-
-      if (!qrAction?.url) {
-        throw new Error("URL QRIS tidak ditemukan dari Midtrans");
+      if (!data.qr_url) {
+        throw new Error("QRIS tidak ditemukan");
       }
 
-      setQrUrl(qrAction.url);
+      setQrUrl(data.qr_url);
 
     } catch (err) {
       setError(err.message);
@@ -90,7 +82,10 @@ export default function OrderPage({ params }) {
 
   if (loading) {
     return (
-      <main style={{ padding: 30, fontFamily: "Arial" }}>
+      <main style={{
+        padding: 30,
+        fontFamily: "Arial"
+      }}>
         <h1>Memuat pesanan...</h1>
       </main>
     );
@@ -98,7 +93,10 @@ export default function OrderPage({ params }) {
 
   if (!order) {
     return (
-      <main style={{ padding: 30, fontFamily: "Arial" }}>
+      <main style={{
+        padding: 30,
+        fontFamily: "Arial"
+      }}>
         <h1>Pesanan tidak ditemukan</h1>
         <p>{error}</p>
       </main>
@@ -114,6 +112,7 @@ export default function OrderPage({ params }) {
         margin: "auto",
       }}
     >
+
       <h1>Pesanan Berhasil</h1>
 
       <div
@@ -145,6 +144,7 @@ export default function OrderPage({ params }) {
           marginTop: 20,
         }}
       >
+
         <h2>{order.products?.name}</h2>
 
         <p>
@@ -191,6 +191,7 @@ export default function OrderPage({ params }) {
               textAlign: "center",
             }}
           >
+
             <h2>Bayar dengan QRIS</h2>
 
             <p>
@@ -216,8 +217,12 @@ export default function OrderPage({ params }) {
             </p>
 
             <p>
-              Status: <strong>MENUNGGU PEMBAYARAN</strong>
+              Status:{" "}
+              <strong>
+                MENUNGGU PEMBAYARAN
+              </strong>
             </p>
+
           </div>
         )}
 
@@ -226,7 +231,9 @@ export default function OrderPage({ params }) {
             ❌ {error}
           </p>
         )}
+
       </div>
+
     </main>
   );
 }

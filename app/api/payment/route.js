@@ -2,26 +2,13 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-
-    const { order_id, gross_amount } = body;
-
-    if (!order_id || !gross_amount) {
-      return NextResponse.json(
-        {
-          error: "order_id dan gross_amount wajib diisi",
-        },
-        { status: 400 }
-      );
-    }
+    const { order_id, gross_amount } = await request.json();
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY;
 
     if (!serverKey) {
       return NextResponse.json(
-        {
-          error: "MIDTRANS_SERVER_KEY belum tersedia",
-        },
+        { error: "MIDTRANS_SERVER_KEY belum tersedia" },
         { status: 500 }
       );
     }
@@ -34,13 +21,11 @@ export async function POST(request) {
       "https://api.sandbox.midtrans.com/v2/charge",
       {
         method: "POST",
-
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": `Basic ${auth}`,
+          Authorization: `Basic ${auth}`,
         },
-
         body: JSON.stringify({
           payment_type: "qris",
 
@@ -58,64 +43,28 @@ export async function POST(request) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error:
-            data.status_message ||
-            "Midtrans gagal membuat QRIS",
-        },
-        { status: response.status }
-      );
-    }
+    /*
+     * UNTUK SEMENTARA:
+     * jangan proses apa pun.
+     * Kembalikan response asli Midtrans.
+     */
 
-    const actions = Array.isArray(data.actions)
-      ? data.actions
-      : [];
-
-    const qrAction = actions.find(
-      (action) =>
-        action &&
-        action.name === "generate-qr-code"
+    return NextResponse.json(
+      {
+        MIDTRANS_STATUS: response.status,
+        MIDTRANS_RESPONSE: data
+      },
+      {
+        status: response.ok ? 200 : response.status
+      }
     );
-
-    const qrActionV2 = actions.find(
-      (action) =>
-        action &&
-        action.name === "generate-qr-code-v2"
-    );
-
-    const qrUrl =
-      qrAction?.url ||
-      qrActionV2?.url ||
-      null;
-
-    if (!qrUrl) {
-      return NextResponse.json(
-        {
-          error: "Midtrans tidak mengembalikan QR",
-          transaction_id: data.transaction_id,
-          transaction_status: data.transaction_status,
-          actions: actions,
-          qr_string: data.qr_string || null,
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      order_id: data.order_id,
-      transaction_id: data.transaction_id,
-      transaction_status: data.transaction_status,
-      qr_url: qrUrl,
-      qr_string: data.qr_string || null,
-    });
 
   } catch (error) {
-    return NextResponse.json({
-  TEST_VERSION: "QRIS_DEBUG_2026",
-  midtrans: data
-});
+    return NextResponse.json(
+      {
+        error: error.message
+      },
+      { status: 500 }
+    );
   }
 }

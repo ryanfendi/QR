@@ -88,9 +88,15 @@ export default function OrderPage({ params }) {
           window.location.reload();
         },
 
-        onError: function () {
-          setError("Pembayaran gagal.");
-        },
+        onError: function (result) {
+  alert(
+    "ERROR MIDTRANS:\n\n" +
+    JSON.stringify(result, null, 2)
+  );
+
+  setError("Pembayaran gagal.");
+  setPaying(false);
+},
 
         onClose: function () {
           setPaying(false);

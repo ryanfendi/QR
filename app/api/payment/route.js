@@ -1,0 +1,56 @@
+import { NextResponse } from "next/server";
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+
+    const { order_id, gross_amount } = body;
+
+    if (!order_id || !gross_amount) {
+      return NextResponse.json(
+        { error: "order_id dan gross_amount wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    const serverKey = process.env.MIDTRANS_SERVER_KEY;
+
+    if (!serverKey) {
+      return NextResponse.json(
+        { error: "MIDTRANS_SERVER_KEY belum tersedia" },
+        { status: 500 }
+      );
+    }
+
+    const auth = Buffer.from(serverKey + ":").toString("base64");
+
+    const response = await fetch(
+      "https://api.sandbox.midtrans.com/v2/charge",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${auth}`,
+        },
+        body: JSON.stringify({
+          payment_type: "qris",
+          transaction_details: {
+            order_id: order_id,
+            gross_amount: Number(gross_amount),
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    return NextResponse.json(data, {
+      status: response.ok ? 200 : response.status,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Gagal membuat pembayaran", detail: error.message },
+      { status: 500 }
+    );
+  }
+}

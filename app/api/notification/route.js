@@ -52,12 +52,14 @@ export async function POST(request) {
       newStatus = "FAILED";
     }
 
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        status: newStatus,
-      })
-      .eq("id", order_id);
+    const databaseOrderId = order_id.slice(0, 36);
+
+const { error } = await supabase
+  .from("orders")
+  .update({
+    status: newStatus,
+  })
+  .eq("id", databaseOrderId);
 
     if (error) {
       return NextResponse.json(

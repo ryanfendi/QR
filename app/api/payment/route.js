@@ -36,9 +36,9 @@ export async function POST(request) {
         method: "POST",
 
         headers: {
-          Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Basic ${auth}`,
+          "Accept": "application/json",
+          "Authorization": `Basic ${auth}`,
         },
 
         body: JSON.stringify({
@@ -64,7 +64,6 @@ export async function POST(request) {
           error:
             data.status_message ||
             "Midtrans gagal membuat QRIS",
-          midtrans: data,
         },
         { status: response.status }
       );
@@ -76,33 +75,41 @@ export async function POST(request) {
 
     const qrAction = actions.find(
       (action) =>
+        action &&
         action.name === "generate-qr-code"
     );
 
     const qrActionV2 = actions.find(
       (action) =>
+        action &&
         action.name === "generate-qr-code-v2"
     );
 
+    const qrUrl =
+      qrAction?.url ||
+      qrActionV2?.url ||
+      null;
+
+    if (!qrUrl) {
+      return NextResponse.json(
+        {
+          error: "Midtrans tidak mengembalikan QR",
+          transaction_id: data.transaction_id,
+          transaction_status: data.transaction_status,
+          actions: actions,
+          qr_string: data.qr_string || null,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-
       order_id: data.order_id,
-
       transaction_id: data.transaction_id,
-
-      transaction_status:
-        data.transaction_status,
-
-      qr_url:
-        qrAction?.url ||
-        qrActionV2?.url ||
-        null,
-
-      qr_string:
-        data.qr_string || null,
-
-      actions: actions,
+      transaction_status: data.transaction_status,
+      qr_url: qrUrl,
+      qr_string: data.qr_string || null,
     });
 
   } catch (error) {

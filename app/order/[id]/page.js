@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { supabase } from "../../../lib/supabase";
 
 export default function OrderPage({ params }) {
@@ -10,7 +9,6 @@ export default function OrderPage({ params }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [qrImage, setQrImage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -44,7 +42,6 @@ export default function OrderPage({ params }) {
 
     setPaying(true);
     setError("");
-    setQrImage("");
 
     try {
       const response = await fetch("/api/payment", {
@@ -59,7 +56,6 @@ export default function OrderPage({ params }) {
       });
 
       const data = await response.json();
-      alert(JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(
@@ -69,19 +65,40 @@ export default function OrderPage({ params }) {
         );
       }
 
-      const image = await QRCode.toDataURL(
-        data.qr_string,
-        {
-          width: 500,
-          margin: 2,
-        }
-      );
+      if (!data.token) {
+        throw new Error(
+          "Midtrans tidak mengembalikan token pembayaran."
+        );
+      }
 
-      setQrImage(image);
+      if (!window.snap) {
+        throw new Error(
+          "Midtrans Snap belum dimuat."
+        );
+      }
+
+      window.snap.pay(data.token, {
+        onSuccess: function () {
+          alert("Pembayaran berhasil!");
+          window.location.reload();
+        },
+
+        onPending: function () {
+          alert("Menunggu pembayaran.");
+          window.location.reload();
+        },
+
+        onError: function () {
+          setError("Pembayaran gagal.");
+        },
+
+        onClose: function () {
+          setPaying(false);
+        },
+      });
 
     } catch (err) {
       setError(err.message);
-    } finally {
       setPaying(false);
     }
   }
@@ -162,66 +179,24 @@ export default function OrderPage({ params }) {
         <p>WhatsApp: {order.buyer_phone}</p>
         <p>Alamat: {order.buyer_address}</p>
 
-        {!qrImage && (
-          <button
-            onClick={handlePayment}
-            disabled={paying}
-            style={{
-              width: "100%",
-              padding: 16,
-              marginTop: 20,
-              border: "none",
-              borderRadius: 10,
-              fontSize: 16,
-              fontWeight: "bold",
-            }}
-          >
-            {paying
-              ? "MEMBUAT QRIS..."
-              : "BAYAR SEKARANG"}
-          </button>
-        )}
-
-        {qrImage && (
-          <div
-            style={{
-              marginTop: 25,
-              textAlign: "center",
-            }}
-          >
-            <h2>Bayar dengan QRIS</h2>
-
-            <p>
-              Scan QR berikut menggunakan aplikasi
-              pembayaran yang mendukung QRIS.
-            </p>
-
-            <img
-              src={qrImage}
-              alt="QRIS Pembayaran"
-              style={{
-                width: 300,
-                maxWidth: "100%",
-                height: "auto",
-                display: "block",
-                margin: "20px auto",
-              }}
-            />
-
-            <p>
-              <strong>
-                Rp {Number(order.total).toLocaleString("id-ID")}
-              </strong>
-            </p>
-
-            <p>
-              Status:{" "}
-              <strong>
-                MENUNGGU PEMBAYARAN
-              </strong>
-            </p>
-          </div>
-        )}
+        <button
+          onClick={handlePayment}
+          disabled={paying}
+          style={{
+            width: "100%",
+            padding: 16,
+            marginTop: 20,
+            border: "none",
+            borderRadius: 10,
+            fontSize: 16,
+            fontWeight: "bold",
+            cursor: paying ? "default" : "pointer",
+          }}
+        >
+          {paying
+            ? "MEMBUKA PEMBAYARAN..."
+            : "BAYAR SEKARANG"}
+        </button>
 
         {error && (
           <p style={{ marginTop: 15 }}>

@@ -1,19 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../../lib/supabase";
 
 export default function CreateProduct() {
+  const router = useRouter();
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [weight, setWeight] = useState("1000");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    alert(
-      `Produk siap dibuat!\n\n${name}\nRp${Number(price).toLocaleString("id-ID")}`
-    );
+    setLoading(true);
+    setError("");
+
+    try {
+      let sellerId = localStorage.getItem("qr_seller_id");
+
+      if (!sellerId) {
+        const { data: seller, error: sellerError } = await supabase
+          .from("sellers")
+          .insert({
+            name: "Penjual QR Commerce",
+            email: null,
+          })
+          .select()
+          .single();
+
+        if (sellerError) throw sellerError;
+
+        sellerId = seller.id;
+
+        localStorage.setItem("qr_seller_id", sellerId);
+      }
+
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .insert({
+          seller_id: sellerId,
+          name: name,
+          price: Number(price),
+          weight_gram: Number(weight),
+        })
+        .select()
+        .single();
+
+      if (productError) throw productError;
+
+      router.push(`/product/${product.id}`);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err?.message || "Produk gagal dibuat. Silakan coba lagi."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -31,7 +78,7 @@ export default function CreateProduct() {
           margin: "0 auto",
         }}
       >
-        <Link
+        <a
           href="/seller"
           style={{
             color: "#666",
@@ -40,7 +87,7 @@ export default function CreateProduct() {
           }}
         >
           ← Kembali ke Dashboard
-        </Link>
+        </a>
 
         <h1 style={{ marginTop: "25px" }}>
           Tambah Produk
@@ -121,20 +168,36 @@ export default function CreateProduct() {
             }}
           />
 
+          {error && (
+            <div
+              style={{
+                background: "#ffe5e5",
+                color: "#b00020",
+                padding: "12px",
+                borderRadius: "10px",
+                marginBottom: "15px",
+                fontSize: "14px",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: "100%",
               padding: "16px",
               border: "none",
               borderRadius: "12px",
-              background: "black",
+              background: loading ? "#777" : "black",
               color: "white",
               fontSize: "16px",
               fontWeight: "bold",
             }}
           >
-            BUAT PRODUK
+            {loading ? "MENYIMPAN..." : "BUAT PRODUK"}
           </button>
         </form>
       </div>

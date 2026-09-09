@@ -78,7 +78,9 @@ export default function OrderPage({ params }) {
       }
 
       window.snap.pay(data.token, {
-        onSuccess: function () {
+  uiMode: "qr",
+
+  onSuccess: function () {
           alert("Pembayaran berhasil!");
           window.location.reload();
         },

@@ -59,18 +59,13 @@ export default function OrderPage({ params }) {
       });
 
       const data = await response.json();
+      alert(JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(
           data.error ||
           data.status_message ||
           "Pembayaran gagal"
-        );
-      }
-
-      if (!data.qr_string) {
-        throw new Error(
-          "Midtrans tidak mengembalikan qr_string"
         );
       }
 
